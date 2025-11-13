@@ -1,0 +1,10 @@
+from django.apps import AppConfig
+
+
+class MoviesConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'movies'
+    verbose_name = '1. Movie Table'
+
+    def ready(self):
+        import movies.signals

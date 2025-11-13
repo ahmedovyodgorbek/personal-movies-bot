@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
+from load_env import *
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,24 +22,35 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-m_tdj$!=4820f-+6$9*&@#iq$r7xl$slavee+c=#g(@h#8yda2'
+SECRET_KEY = SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = DEBUG
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    "unfold",  # before django.contrib.admin
+    "unfold.contrib.filters",  # optional, if special filters are needed
+    "unfold.contrib.forms",  # optional, if special form elements are needed
+    "unfold.contrib.inlines",  # optional, if special inlines are needed
+    "unfold.contrib.import_export",  # optional, if django-import-export package is used
+    "unfold.contrib.guardian",  # optional, if django-guardian package is used
+    "unfold.contrib.simple_history",  # optional, if django-simple-history package is used
+    "unfold.contrib.location_field",  # optional, if django-location-field package is used
+    "unfold.contrib.constance",  # optional, if django-constance package is used
+    
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
-    "apps.users"
-]
+
+    'app',
+    'movies'
+    ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -55,7 +67,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -116,12 +128,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")   # for collectstatic
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),   # if you keep custom static assets
-]
+STATIC_ROOT = BASE_DIR / "staticfiles"   # for collectstatic
+STATICFILES_DIRS = [BASE_DIR / "assets"]
 
-MEDIA_URL = '/media/'  
+MEDIA_URL = "/" 
+
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
@@ -129,15 +140,46 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-ALLOWED_HOSTS = [
-    # "localhost",
-    # "127.0.0.1",
-    # "enriqueta-stringlike-cheryl.ngrok-free.dev",
-    # "95.46.210.69"
+ALLOWED_HOSTS = ["*"]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://enriqueta-stringlike-cheryl.ngrok-free.dev",
 ]
 
-# CSRF_TRUSTED_ORIGINS = [
-#     "https://enriqueta-stringlike-cheryl.ngrok-free.dev",
-#     "https://95.46.210.69"
-# ]
+UNFOLD = {
+    "LOGIN": {
+        # This title appears on the login page
+        "title": "Welcome, Mr Ahmedov",
+    },
+    # This text appears in the top left of the admin site's navigation bar
+    "SITE_HEADER": "Mr Ahmedov", 
+    
+    # RECOMMENDED: This title appears in the browser tab for the admin index page
+    "SITE_TITLE": "Ahmedov Admin Dashboard", 
 
+    "SIDEBAR": {
+        "show_search": True,
+    },
+    
+    # "SHOW_LANGUAGES": True, 
+}
+
+
+CLOUDFLARE_R2_CONFIG_OPTIONS = {
+    "bucket_name": CLOUDFLARE_R2_BUCKET,
+    "default_acl": "public-read",  # or "private"
+    "signature_version": "s3v4",
+    "endpoint_url": CLOUDFLARE_R2_BUCKET_ENDPOINT,
+    "access_key": CLOUDFLARE_R2_ACCESS_KEY,
+    "secret_key": CLOUDFLARE_R2_SECRET_KEY,
+}
+
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+    "default": {
+        "BACKEND": "helpers.cloudfare.storages.PublicMediaStorage",
+        "OPTIONS": CLOUDFLARE_R2_CONFIG_OPTIONS,
+    },
+}

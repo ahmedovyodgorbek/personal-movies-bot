@@ -10,7 +10,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
 # from load_env import *
-# from apps.start.handlers import StartHandler
+from bot.handlers.user import router as user_router
 # from apps.common.middlewares import MembershipCheckMiddleware
 from loader import bot, dp
 
@@ -19,16 +19,20 @@ async def main():
     # Middlewares
     # dp.message.middleware(MembershipCheckMiddleware(bot=bot))
 
-    # Initialize handlers (registers routes to routers)
-    # start_handler = StartHandler()
-
     # Add routers to dispatcher
-    # dp.include_router(router=start_handler.router)
+    dp.include_router(router=user_router)
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
+    print("Bot started polling...")
     logging.basicConfig(level=logging.INFO)
-    asyncio.run(main())
+    if __name__ == "__main__":
+        print("Welcome to Movies Bot")
+        try:
+            asyncio.run(main())
+        except (KeyboardInterrupt, SystemExit):
+            print("Bot stopped!")
+

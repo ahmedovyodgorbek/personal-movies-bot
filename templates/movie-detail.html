@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CinemaHub - Movie Details</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      :root {
+        --primary-dark: #1f2937;
+        --secondary-dark: #374151;
+        --accent-color: #f59e0b;
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--primary-dark);
+        color: #d1d5db;
+      }
+      .back-button {
+        transition: all 0.2s ease;
+      }
+      .back-button:hover {
+        transform: translateX(-4px);
+      }
+      .watch-button {
+        transition: all 0.3s ease;
+      }
+      .watch-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 10px 25px rgba(245, 158, 11, 0.4);
+      }
+      .support-button {
+        transition: all 0.3s ease;
+      }
+      .support-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+      }
+      /* Modal styles */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 100;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(4px);
+      }
+      .modal.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.3s ease;
+      }
+      .modal-content {
+        background-color: #1f2937;
+        border: 1px solid #374151;
+        border-radius: 1rem;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: slideUp 0.3s ease;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes slideUp {
+        from {
+          transform: translateY(50px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      .card-display {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        color: white;
+        font-family: 'Courier New', monospace;
+        position: relative;
+        overflow: hidden;
+      }
+      .card-display::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        animation: shimmer 3s infinite;
+      }
+      @keyframes shimmer {
+        0%,
+        100% {
+          transform: translate(0, 0);
+        }
+        50% {
+          transform: translate(-30%, -30%);
+        }
+      }
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #111827;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #4b5563;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen">
+    <!-- Header & Logo -->
+    <header class="bg-gray-900 shadow-xl sticky top-0 z-10">
+      <div class="max-w-screen-xl mx-auto flex justify-between items-center p-4">
+        <div class="flex items-center space-x-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="22 8 12 2 2 8 12 14 22 8"></polygon>
+            <polygon points="2 16 12 22 22 16 12 10 2 16"></polygon>
+          </svg>
+          <h1 class="text-xl font-bold text-white tracking-wider">Ahmedov Movies</h1>
+        </div>
+
+        <div class="flex space-x-4 text-gray-400">
+          <a href="https://www.instagram.com/english.movies.y/" target="_blank" class="hover:text-amber-500 transition duration-150" aria-label="Instagram"><img src="https://upload.wikimedia.org/wikipedia/commons/2/21/Instagram_Glyph_Gradient_RGB_logo.svg" alt="Telegram" width="20" height="20" /></a>
+          <a href="https://t.me/english_kinolar_y" target="_blank" class="hover:text-amber-500 transition duration-150" aria-label="Telegram"><img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="Telegram" width="20" height="20" /></a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Backdrop Hero Section -->
+    <section class="movie-backdrop">
+      <div class="max-w-screen-xl mx-auto px-4 py-8">
+        <a href="javascript:history.back()" class="back-button inline-flex items-center text-gray-300 hover:text-amber-500 transition bg-gray-900/50 backdrop-blur-sm px-4 py-2 rounded-lg">
+          <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i>
+          Back
+        </a>
+      </div>
+    </section>
+
+    <!-- Main Content Area -->
+    <main class="max-w-screen-xl mx-auto px-4 py-8">
+      <div class="bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
+        <div class="grid md:grid-cols-3 gap-6 p-6">
+          <!-- Movie Poster -->
+          <div class="md:col-span-1">
+            <div class="rounded-xl overflow-hidden shadow-lg sticky top-24">
+              <img src="{{ movie.image.url }}" alt="Movie Poster" class="w-full h-auto object-cover" />
+            </div>
+          </div>
+
+          <!-- Movie Details -->
+          <div class="md:col-span-2 space-y-6">
+            <!-- Title and Basic Info -->
+            <div>
+              <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">{{ movie.title }}</h1>
+              <div class="flex flex-wrap items-center gap-3 text-gray-400 text-sm">
+                <span class="flex items-center">
+                  <i data-lucide="calendar" class="w-4 h-4 mr-1"></i>
+                  {{ movie.release_date }}
+                </span>
+                <span class="flex items-center">
+                  <i data-lucide="clock" class="w-4 h-4 mr-1"></i>
+                  {{ movie.duration }}
+                </span>
+                {% for gen in movie.genres.all %}
+                  <span class="bg-gray-700 px-3 py-1 rounded-full text-xs font-medium">{{ gen.title }}</span>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- IMDb Rating -->
+            <div class="flex items-center space-x-4">
+              <div class="bg-gray-900 rounded-lg px-6 py-4 inline-flex items-center space-x-3">
+                <i data-lucide="star" class="w-8 h-8 text-amber-500 fill-amber-500"></i>
+                <div>
+                  <div class="text-3xl font-bold text-white">{{ movie.rating }}</div>
+                  <div class="text-xs text-gray-400">IMDb Rating</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div>
+              <h2 class="text-xl font-semibold text-white mb-3 flex items-center">
+                <i data-lucide="file-text" class="w-5 h-5 mr-2 text-amber-500"></i>
+                Description
+              </h2>
+              <p class="text-gray-300 leading-relaxed">{{ movie.description }}</p>
+            </div>
+
+            <!-- Additional Info -->
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div class="bg-gray-900 rounded-lg p-4">
+                <div class="text-gray-400 text-sm mb-1">Cast</div>
+
+                <div class="text-white font-medium">
+                  {% for actor in movie.actors.all %}
+                    {{ actor.name }}{% if not forloop.last %}, {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 pt-4">
+              <button onclick="window.open('{{ movie.telegram_link }}', '_blank')" class="watch-button flex-1 bg-amber-600 hover:bg-amber-700 text-gray-900 font-bold py-4 px-6 rounded-lg shadow-lg flex items-center justify-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
+                </svg>
+                <span>Watch on Telegram</span>
+              </button>
+
+              <button onclick="openSupportModal()" class="support-button flex-1 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-4 px-6 rounded-lg shadow-lg flex items-center justify-center space-x-2 border border-gray-600">
+                <i data-lucide="heart" class="w-5 h-5"></i>
+                <span>Support Us</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- You May Also Like Section -->
+      <section class="mt-12 mb-8">
+        <h2 class="text-2xl font-bold text-white mb-6 flex items-center">
+          <i data-lucide="film" class="w-6 h-6 mr-2 text-amber-500"></i>
+          You May Also Like
+        </h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          <!-- Similar movie cards -->
+          {% for r_movie in related_movies %}
+            <a href="{% url 'movie-detail' r_movie.slug %}" class="block">
+              <div class="bg-gray-900 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition cursor-pointer transform hover:scale-105">
+                <img src="{{ r_movie.image.url }}" alt="Similar Movie" class="w-full h-64 object-cover" />
+                <div class="p-3">
+                  <h3 class="text-white font-semibold truncate">{{ r_movie.title }}</h3>
+                  <div class="flex items-center mt-2">
+                    <i data-lucide="star" class="w-4 h-4 text-amber-500 fill-amber-500 mr-1"></i>
+                    <span class="text-sm text-white">{{ r_movie.rating }}</span>
+                  </div>
+                </div>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      </section>
+    </main>
+
+    <!-- Support Modal -->
+    <div id="supportModal" class="modal">
+      <div class="modal-content">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-white flex items-center">
+              <i data-lucide="heart" class="w-6 h-6 mr-2 text-amber-500 fill-amber-500"></i>
+              Support Ahmedov Movies
+            </h2>
+            <button onclick="closeSupportModal()" class="text-gray-400 hover:text-white transition"><i data-lucide="x" class="w-6 h-6"></i></button>
+          </div>
+
+          <p class="text-gray-300 mb-6">Help us continue providing quality movie content! Your support keeps us running and ad-free.</p>
+
+          <!-- Credit Card Display -->
+          <div class="card-display mb-6">
+            <div class="relative z-10">
+              <div class="flex justify-between items-start mb-8">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect width="20" height="14" x="2" y="5" rx="2"></rect>
+                  <line x1="2" x2="22" y1="10" y2="10"></line>
+                </svg>
+                <div class="text-right text-xs opacity-80">Humo</div>
+              </div>
+              <div class="text-2xl tracking-widest mb-4 font-mono">9860 1201 2374 1015</div>
+              <div class="flex justify-between items-end">
+                <div>
+                  <div class="text-xs opacity-70 mb-1">Card Holder</div>
+                  <div class="font-semibold">Yodgorbek Ahmedov</div>
+                </div>
+                <div>
+                  <div class="text-xs opacity-70 mb-1"></div>
+                  <div class="font-semibold"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Copy Button -->
+          <button onclick="copyCardNumber(event)" class="w-full bg-amber-600 hover:bg-amber-700 text-gray-900 font-bold py-3 px-6 rounded-lg transition flex items-center justify-center space-x-2">
+            <i data-lucide="copy" class="w-5 h-5"></i>
+            <span>Copy Card Number</span>
+          </button>
+
+          <p class="text-center text-gray-400 text-xs mt-4">Thank you for your generous support! 💛</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 p-4 mt-8">
+      <div class="max-w-screen-xl mx-auto text-center text-gray-500 text-sm">
+        &copy; <span id="currentYear"></span> CinemaHub - Powered by Telegram Web App.<div class="mt-2 text-xs">
+          For support, please contact us via <a href="https://t.me/y_ahmedov" class="text-amber-500 hover:underline">Telegram</a>.
+        </div>
+      </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+      // Set current year
+      document.getElementById('currentYear').textContent = new Date().getFullYear()
+      
+      // Modal functions
+      function openSupportModal() {
+        document.getElementById('supportModal').classList.add('active')
+        document.body.style.overflow = 'hidden'
+      }
+      
+      function closeSupportModal() {
+        document.getElementById('supportModal').classList.remove('active')
+        document.body.style.overflow = 'auto'
+      }
+      
+      // Close modal when clicking outside
+      document.getElementById('supportModal').addEventListener('click', function (e) {
+        if (e.target === this) {
+          closeSupportModal()
+        }
+      })
+      
+      // Copy card number function
+      function copyCardNumber(event) {
+        const cardNumber = '9860 1201 2374 1015'
+        navigator.clipboard
+          .writeText(cardNumber)
+          .then(function () {
+            const button = event.target.closest('button')
+            const originalText = button.innerHTML
+            button.innerHTML = '<i data-lucide="check" class="w-5 h-5"></i><span>Copied!</span>'
+            lucide.createIcons()
+      
+            setTimeout(() => {
+              button.innerHTML = originalText
+              lucide.createIcons()
+            }, 2000)
+          })
+          .catch(function (err) {
+            alert('Failed to copy: ' + err)
+          })
+      }
+      
+      // Close modal with Escape key
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+          closeSupportModal()
+        }
+      })
+      
+      // Initialize icons
+      lucide.createIcons()
+    </script>
+  </body>
+</html>

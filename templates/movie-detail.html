@@ -212,9 +212,7 @@
                 <div class="text-gray-400 text-sm mb-1">Cast</div>
 
                 <div class="text-white font-medium">
-                  {% for actor in movie.actors.all %}
-                    {{ actor.name }}{% if not forloop.last %}, {% endif %}
-                  {% endfor %}
+                    {{ movies.actors }}
                 </div>
               </div>
             </div>

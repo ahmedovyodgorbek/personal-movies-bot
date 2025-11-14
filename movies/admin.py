@@ -8,10 +8,6 @@ from datetime import timedelta
 import re
 
 
-@admin.register(models.MovieActors)
-class MovieActorsAdmin(ModelAdmin):
-    list_display = ("name",)
-
 
 @admin.register(models.MovieGenres)
 class MovieGenresAdmin(ModelAdmin):
@@ -27,14 +23,14 @@ class MoviesAdmin(ModelAdmin):
         "rating",
         "duration",
         "genre_list",
-        "actor_list"
+        "actors"
     )
     list_filter = ("type", "release_date", "rating", "genres", "created_at")
-    search_fields = ("title", "description", "genres__title", "actors__name")
+    search_fields = ("title", "description", "genres__title", "actors")
     # prepopulated_fields = {"slug": ("title",)}
     readonly_fields = ("slug","short_description")
     ordering = ("-release_date", "title")
-    filter_vertical = ("genres", "actors")
+    filter_vertical = ("genres",)
     list_per_page = 25
 
     fieldsets = (
@@ -47,11 +43,12 @@ class MoviesAdmin(ModelAdmin):
                 "type",
                 "release_date",
                 "duration",
-                "rating"
+                "rating",
+                "actors"
             )
         }),
         ("Relations", {
-            "fields": ("genres", "actors"),
+            "fields": ("genres",),
             "classes": ("collapse",),
         }),
         ("Media & Links", {
@@ -72,9 +69,5 @@ class MoviesAdmin(ModelAdmin):
     @admin.display(description="Genres")
     def genre_list(self, obj):
         return obj.genre_list()
-
-    @admin.display(description="Actors")
-    def actor_list(self, obj):
-        return obj.actor_list()
 
 

@@ -23,7 +23,8 @@ class MoviesAdmin(ModelAdmin):
         "rating",
         "duration",
         "genre_list",
-        "actors"
+        "actors",
+        "created_at"
     )
     list_filter = ("type", "release_date", "rating", "genres", "created_at")
     search_fields = ("title", "description", "genres__title", "actors")

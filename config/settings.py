@@ -140,7 +140,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-ALLOWED_HOSTS = ["45.138.158.52"]
+ALLOWED_HOSTS = ["45.138.158.52", 'ahmedov-movies.duckdns.org'] 
 
 CSRF_TRUSTED_ORIGINS = [
     "http://45.138.158.52",

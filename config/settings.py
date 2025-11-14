@@ -140,10 +140,10 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["45.138.158.52"]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://enriqueta-stringlike-cheryl.ngrok-free.dev",
+    "http://45.138.158.52",
 ]
 
 UNFOLD = {

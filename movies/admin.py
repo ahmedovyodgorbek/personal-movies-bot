@@ -29,7 +29,7 @@ class MoviesAdmin(ModelAdmin):
     search_fields = ("title", "description", "genres__title", "actors")
     # prepopulated_fields = {"slug": ("title",)}
     readonly_fields = ("slug","short_description")
-    ordering = ("-release_date", "title")
+    ordering = ("-release_date", "title", "created_at")
     filter_vertical = ("genres",)
     list_per_page = 25
 

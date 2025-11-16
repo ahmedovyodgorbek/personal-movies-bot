@@ -49,9 +49,13 @@ def movie_detail(request, slug):
         .distinct()
         .order_by('-rating')[:10]
     )
+    link = f"https://t.me/{load_env.BOT}?startapp={movie.slug}"
+    share_link = f"https://t.me/share/url?url={link}&text=Check out this movie!"
     context = {
         "movie":movie,
-        "related_movies":related_movies
+        "related_movies":related_movies,
+        "share_link":share_link,
+        "copy_link":link
     }
     return render(request, 'movie-detail.html', context=context)
 
@@ -119,10 +123,12 @@ def check_subscription(request):
         result = response.json()
         
         if result.get('ok'):
+            print("Subscription checked - status ok")
             status = result['result']['status']
             is_subscribed = status in ['creator', 'administrator', 'member']
             return JsonResponse({'isSubscribed': is_subscribed})
         else:
+            print("Subscription checked - status error")
             return JsonResponse({'error': 'Failed to check subscription'}, status=500)
             
     except Exception as e:

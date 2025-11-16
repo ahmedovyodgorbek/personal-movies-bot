@@ -110,7 +110,7 @@ def create_or_update_user(message:Message):
     is_premium = getattr(message.from_user, "is_premium", False) or False
 
     now = timezone.now()
-    user = TelegramUser.objects.update_or_create(
+    user, created = TelegramUser.objects.update_or_create(
         telegram_id=message.from_user.id,
         defaults={
             "username": message.from_user.username,

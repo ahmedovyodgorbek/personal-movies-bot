@@ -7,7 +7,6 @@ from app.models import TelegramUser
 from django.db.models import Count
 from bot.keyboards.user import admin
 from html import escape
-from django.utils import timezone
 
 
 
@@ -109,7 +108,6 @@ async def invite_friends(message: Message, command: CommandObject):
 def create_or_update_user(message:Message):
     is_premium = getattr(message.from_user, "is_premium", False) or False
 
-    now = timezone.now()
     user, created = TelegramUser.objects.update_or_create(
         telegram_id=message.from_user.id,
         defaults={
@@ -117,8 +115,7 @@ def create_or_update_user(message:Message):
             "first_name": message.from_user.first_name,
             "last_name": message.from_user.last_name,
             "language_code": message.from_user.language_code,
-            "is_premium": is_premium,
-            "last_activity": now
+            "is_premium": is_premium
         }
     )
     return user

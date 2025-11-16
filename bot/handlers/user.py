@@ -7,6 +7,8 @@ from app.models import TelegramUser
 from django.db.models import Count
 from bot.keyboards.user import admin
 from html import escape
+from django.utils import timezone
+
 
 
 router = Router()
@@ -43,9 +45,7 @@ async def start_handler(message: Message, command: CommandObject):
 
 @router.message(Command("friends"))
 async def friends(message: Message):
-    user = await sync_to_async(
-        lambda: TelegramUser.objects.filter(telegram_id=message.from_user.id).first()
-    )()
+    user = await create_or_update_user(message)
     top_users = await sync_to_async(
         lambda: list(
             TelegramUser.objects.annotate(num_referrals=Count('referrals'))
@@ -92,16 +92,36 @@ def mention_user(user_id: int, first_name: str) -> str:
 
 @router.message(Command("admin"))
 async def contact_admin(message: Message):
+    user = await create_or_update_user(message)
     await message.answer(text="Click on the button to contact with Admin", reply_markup=admin())
 
 @router.message(Command("referral"))
 async def invite_friends(message: Message, command: CommandObject):
-    user = await sync_to_async(TelegramUser.objects.get)(telegram_id=message.from_user.id)
+    user = await create_or_update_user(message)
     text = (f"Share this link: \n\n" 
             f"<b>{user.referral_link}</b>\n\n"
             f"Climb the leaderboard and get more referrals! 🥇🥈🥉")
     
     await message.answer(text=text, parse_mode="HTML")
+
+
+@sync_to_async
+def create_or_update_user(message:Message):
+    is_premium = getattr(message.from_user, "is_premium", False) or False
+
+    now = timezone.now()
+    user = TelegramUser.objects.update_or_create(
+        telegram_id=message.from_user.id,
+        defaults={
+            "username": message.from_user.username,
+            "first_name": message.from_user.first_name,
+            "last_name": message.from_user.last_name,
+            "language_code": message.from_user.language_code,
+            "is_premium": is_premium,
+            "last_activity": now
+        }
+    )
+    return user
 
 
 def handle_user_referral(message: Message, args: str):

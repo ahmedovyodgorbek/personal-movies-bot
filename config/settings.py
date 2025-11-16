@@ -195,3 +195,7 @@ CSRF_COOKIE_SECURE = True
 
 CELERY_BROKER_URL="redis://redis:6379/0"
 CELERY_RESULT_BACKEND="redis://redis:6379/0"
+
+ADMINS = [
+    ("Ahmedov Yodgorbek", "yodgorbekaxmedov6@gmail.com"),
+]

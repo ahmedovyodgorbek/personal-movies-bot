@@ -267,6 +267,20 @@
         const initData = tg.initData;
         
         let isCheckingSubscription = false;
+
+        function handleStartParamOnce() {
+            const movieSlug = tg.initDataUnsafe?.start_param;
+            if (!movieSlug) return;
+
+            const lastHandled = sessionStorage.getItem("last_handled_movie");
+
+            if (lastHandled === movieSlug) {
+                return;
+            }
+
+            sessionStorage.setItem("last_handled_movie", movieSlug);
+            window.location.href = `/${movieSlug}/`;
+        }
         
         async function checkSubscription() {
             if (!userId) {
@@ -293,14 +307,7 @@
                 const data = await response.json();
                 
                 if (data.isSubscribed) {
-                    // Grab the start parameter (payload) if it exists
-                    const movieSlug = tg.initDataUnsafe?.start_param; // e.g., "hello-world"
-
-                    if (movieSlug) {
-                        // Redirect to your movie detail page
-                        // Adjust the URL pattern to match your Django route
-                        window.location.href = `/${movieSlug}/`;
-                    }
+                    handleStartParamOnce();
                     hideSubscriptionModal();
                 } else {
                     showSubscriptionModal();

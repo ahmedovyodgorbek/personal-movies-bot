@@ -142,7 +142,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 ALLOWED_HOSTS = ["45.138.158.52", 'ahmedov-movies.duckdns.org', 
                  "enriqueta-stringlike-cheryl.ngrok-free.dev",
-                 "127.0.0.1"] 
+                 "127.0.0.1", 'localhost'] 
 
 CSRF_TRUSTED_ORIGINS = [
     "http://45.138.158.52",
@@ -189,3 +189,9 @@ STORAGES = {
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+
+# CELERY_BROKER_URL = 'redis://localhost:6379/0'
+# CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+
+CELERY_BROKER_URL="redis://redis:6379/0"
+CELERY_RESULT_BACKEND="redis://redis:6379/0"

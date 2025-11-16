@@ -20,11 +20,12 @@ from django.urls import path, re_path
 from django.views.static import serve
 
 from django.conf.urls.static import static
-from movies.views import movies_list, movie_detail, check_subscription
+from movies.views import movies_list, movie_detail, check_subscription, send_movie
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('check-subscription/', check_subscription, name='check-subscription'),
+    path('send-movie/', send_movie, name='send-movie'),
     path('<slug:slug>/', movie_detail, name='movie-detail'),
     path("", movies_list, name='movies-list'),
     

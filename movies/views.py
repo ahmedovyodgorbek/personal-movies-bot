@@ -3,6 +3,9 @@ from django.core.paginator import Paginator
 
 from .models import Movies, MovieGenres
 import load_env
+from bot.utils.send_movie import send_movie_task_async
+import json
+
 
 def movies_list(request):
     # Get filter parameters
@@ -91,7 +94,6 @@ def check_subscription(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
     
-    import json
     data = json.loads(request.body)
     user_id = data.get('userId')
     init_data = data.get('initData')
@@ -134,3 +136,28 @@ def check_subscription(request):
     except Exception as e:
         print(f"Error checking subscription: {e}")
         return JsonResponse({'error': str(e)}, status=500)
+    
+@csrf_exempt
+def send_movie(request):
+    if request.method != "POST":
+        return JsonResponse({'status': 'error'}, status=400)
+    
+    data = json.loads(request.body)
+    user_id = data.get("user_id")
+    movie_id = data.get("movie_id")
+
+    if not (user_id and movie_id):
+        return JsonResponse({'status': 'error'})
+    
+    try:
+        movie_obj = Movies.objects.get(id=int(movie_id))
+    except Movies.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Movie not found'}, status=404)
+    
+    movie_link = movie_obj.telegram_link
+    message_id = int(movie_link.rstrip("/").split("/")[-1])
+    # Queue async task
+    send_movie_task_async.delay(message_id, int(user_id))
+
+    
+    return JsonResponse({"status":"ok"})

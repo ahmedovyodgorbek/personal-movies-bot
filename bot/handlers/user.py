@@ -24,9 +24,14 @@ async def start_handler(message: Message, command: CommandObject):
         if referrer:
             text += f"\n🎉 You were invited by @{referrer.username or referrer.telegram_id}."
             try:
+                safe_name = escape(user.first_name or "Unknown")
+                if user.username:
+                    name = f"@{user.username}" 
+                else:
+                    name = f"<a href='tg://user?id={message.from_user.id}'>{safe_name}</a>"
                 await message.bot.send_message(
                     referrer.telegram_id,
-                    f"🎊 Your friend @{user.username or user.telegram_id} just joined using your referral link!"
+                    f"🎊 Your friend {name} just joined using your referral link!"
                 )
             except Exception:
                 pass
@@ -65,7 +70,7 @@ async def friends(message: Message):
             # Choose display name safely
             first_name = escape(user['first_name'] or "Unknown")
             user_id = int(user['telegram_id'])
-            name = f"<a href='tg://user?id={user_id}'>{first_name}</a>"
+            name = mention_user(user['telegram_id'], user['first_name'])
             # Add trophy emojis for top 3
             if index == 1:
                 medal = "🥇"
@@ -80,7 +85,10 @@ async def friends(message: Message):
     # Send message with HTML parse mode
     await message.answer(text=text, parse_mode="HTML")
     
-
+def mention_user(user_id: int, first_name: str) -> str:
+    from html import escape
+    safe_name = escape(first_name or "Unknown")
+    return f"<a href='tg://user?id={user_id}'>{safe_name}</a>"
 
 @router.message(Command("admin"))
 async def contact_admin(message: Message):

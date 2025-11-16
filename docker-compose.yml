@@ -15,6 +15,11 @@ services:
     env_file:
       - .env
     restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m" 
+        max-file: "3" 
 
   bot:
     build: .
@@ -27,3 +32,38 @@ services:
     depends_on:
       - web
     restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+  
+  celery:
+    build: .
+    container_name: celery_worker
+    command: celery -A config worker --loglevel=info
+    volumes:
+      - .:/usr/src/app
+    env_file:
+      - .env
+    depends_on:
+      - web
+      - redis
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

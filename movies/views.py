@@ -22,10 +22,10 @@ def movies_list(request):
     if genre:
         movies = movies.filter(genres__title=genre).order_by("-rating")
     if min_rating:
-        movies = movies.filter(rating__gte=float(min_rating)).order_by("rating")
+        movies = movies.filter(rating__gte=float(min_rating)).order_by("-rating")
     
     # Pagination
-    paginator = Paginator(movies, 14)  # 10 movies per page
+    paginator = Paginator(movies, 20)  # 20 movies per page
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     

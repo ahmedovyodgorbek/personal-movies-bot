@@ -192,9 +192,10 @@ CSRF_COOKIE_SECURE = True
 
 # CELERY_BROKER_URL = 'redis://localhost:6379/0'
 # CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+import load_env
 
-CELERY_BROKER_URL="redis://redis:6379/0"
-CELERY_RESULT_BACKEND="redis://redis:6379/0"
+CELERY_BROKER_URL=load_env.REDIS
+CELERY_RESULT_BACKEND=load_env.REDIS
 
 ADMINS = [
     ("Ahmedov Yodgorbek", "yodgorbekaxmedov6@gmail.com"),

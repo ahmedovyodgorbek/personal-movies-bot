@@ -30,7 +30,7 @@ async def post_text(movie:Movies):
         f"<b>ID: {movie.id}</b>\n\n"
         f"  <b>- Genre:</b> {genres_text}\n"
         f"  <b>- Year:</b> {movie.release_date}\n"
-        f"  <b>- IMDb:</b> {movie.rating}\n"
+        f"  <b>- IMDb:</b> {movie.rating}/10\n"
         f"  <b>- Cast:</b> {movie.actors}\n\n"
         f"Send the ID  to the bot\n"
         f"Bot - @AhmedovMoviesBot"

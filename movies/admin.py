@@ -32,10 +32,10 @@ class MoviesAdmin(ModelAdmin):
         "created_at"
     )
     list_filter = ("type", "release_date", "rating", "genres", "created_at")
-    search_fields = ("title", "description", "genres__title", "actors")
+    search_fields = ("title", "actors")
     # prepopulated_fields = {"slug": ("title",)}
     readonly_fields = ("slug","short_description")
-    ordering = ("-release_date", "title", "created_at")
+    ordering = ("-id","created_at")
     filter_vertical = ("genres",)
     list_per_page = 25
 

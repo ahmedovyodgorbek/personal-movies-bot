@@ -104,6 +104,7 @@ async def invite_friends(message: Message, command: CommandObject):
 
 @router.message(F.text.regexp(r'^\d+$'))
 async def send_movie(message: Message):
+    user = await create_or_update_user(message)
     movie_id = int(message.text)
 
     partners = await sync_to_async(list)(PartnerChannels.objects.all())

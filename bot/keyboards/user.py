@@ -14,3 +14,16 @@ def admin():
     )
     return keyboard
 
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+
+def channels_keyboard(channels):
+    builder = InlineKeyboardBuilder()
+
+    for channel in channels:
+        builder.button(
+            text=channel.title,
+            url=channel.link
+        )
+
+    builder.adjust(1)
+    return builder.as_markup()

@@ -13,10 +13,15 @@ import re
 class MovieGenresAdmin(ModelAdmin):
     list_display = ("title",)
 
+@admin.register(models.PartnerChannels)
+class MovieGenresAdmin(ModelAdmin):
+    list_display = ("title",)
+    
 
 @admin.register(models.Movies)
 class MoviesAdmin(ModelAdmin):
     list_display = (
+        "id",
         "title",
         "type",
         "release_date",

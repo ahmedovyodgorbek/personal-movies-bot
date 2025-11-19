@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.core.paginator import Paginator
 
-from .models import Movies, MovieGenres
+from .models import Movies, MovieGenres, PartnerChannels
 import load_env
 from bot.utils.send_movie import send_movie_task_async
 import json
@@ -91,55 +91,6 @@ def verify_telegram_web_app_data(init_data):
     return hmac.compare_digest(calculated_hash, received_hash)
 
 @csrf_exempt
-def check_subscription(request):
-    """Check if user is subscribed to the channel"""
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-    
-    data = json.loads(request.body)
-    user_id = data.get('userId')
-    init_data = data.get('initData')
-    
-    # Verify the request is from Telegram (optional but recommended)
-    # if not verify_telegram_web_app_data(init_data):
-    #     return JsonResponse({'error': 'Invalid request'}, status=403)
-    
-    if not user_id:
-        return JsonResponse({'error': 'User ID required'}, status=400)
-    
-    if not verify_telegram_web_app_data(init_data):
-        return JsonResponse({'error': 'Invalid request'}, status=403)
-    
-    try:
-        # Check channel membership
-        bot_token = load_env.TOKEN
-        channel_id = "@english_kinolar_y"
-        
-        response = requests.get(
-            f'https://api.telegram.org/bot{bot_token}/getChatMember',
-            params={
-                'chat_id': channel_id,
-                'user_id': user_id
-            },
-            timeout=5
-        )
-        
-        result = response.json()
-        
-        if result.get('ok'):
-            print("Subscription checked - status ok")
-            status = result['result']['status']
-            is_subscribed = status in ['creator', 'administrator', 'member']
-            return JsonResponse({'isSubscribed': is_subscribed})
-        else:
-            print("Subscription checked - status error")
-            return JsonResponse({'error': 'Failed to check subscription'}, status=500)
-            
-    except Exception as e:
-        print(f"Error checking subscription: {e}")
-        return JsonResponse({'error': str(e)}, status=500)
-    
-@csrf_exempt
 def send_movie(request):
     if request.method != "POST":
         return JsonResponse({'status': 'error'}, status=400)
@@ -151,6 +102,14 @@ def send_movie(request):
     if not (user_id and movie_id):
         return JsonResponse({'status': 'error'})
     
+    # Check subscription!
+    if not check_subscription(user_id=user_id):
+        return JsonResponse({
+            "status": "error",
+            "message": "User is not subscribed to required channels"
+        }, status=403)
+
+    # Continue if subscribed
     try:
         movie_obj = Movies.objects.get(id=int(movie_id))
     except Movies.DoesNotExist:
@@ -158,8 +117,48 @@ def send_movie(request):
     
     movie_link = movie_obj.telegram_link
     message_id = int(movie_link.rstrip("/").split("/")[-1])
-    # Queue async task
+
     send_movie_task_async.delay(message_id, int(user_id))
 
-    
-    return JsonResponse({"status":"ok"})
+    return JsonResponse({"status": "ok"}, status=200)
+
+@csrf_exempt
+def check_subscription_view(request):
+    user_id = json.loads(request.body).get("user_id")
+    if not user_id:
+        return JsonResponse({"status": "error"}, status=400)
+
+    if check_subscription(user_id):
+        return JsonResponse({"status": "ok"})
+    else:
+        return JsonResponse({"status": "error"}, status=403)
+
+
+def check_subscription(user_id: int):
+    """Return True if user is subscribed to ALL channels, otherwise False"""
+
+    bot_token = load_env.TOKEN
+    channel_ids = PartnerChannels.objects.all()
+
+    try:
+        for ch in channel_ids:
+            response = requests.get(
+                f'https://api.telegram.org/bot{bot_token}/getChatMember',
+                params={
+                    'chat_id': ch.channel_id,
+                    'user_id': user_id
+                },
+                timeout=5
+            )
+
+            data = response.json()
+            status = data.get("result", {}).get("status")
+
+            if status not in ["member", "administrator", "creator"]:
+                return False  # not subscribed
+
+        return True  # subscribed to all channels
+
+    except Exception as e:
+        print("Error:", e)
+        return False

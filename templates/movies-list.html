@@ -234,30 +234,6 @@
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-    <!-- Subscription Modal -->
-    <div id="subscriptionModal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden items-center justify-center p-4">
-        <div class="bg-gray-800 rounded-xl max-w-md w-full p-6 shadow-2xl">
-            <div class="text-center">
-                <div class="mb-4">
-                    <i data-lucide="lock" class="w-16 h-16 text-amber-500 mx-auto"></i>
-                </div>
-                <h2 class="text-2xl font-bold text-white mb-3">Subscribe to Continue</h2>
-                <p class="text-gray-400 mb-6">Please subscribe to our Telegram channel to access the full movie catalog</p>
-                
-                <a href="https://t.me/english_kinolar_y" target="_blank" 
-                class="block w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg mb-3 transition duration-150">
-                    <i data-lucide="send" class="w-5 h-5 inline mr-2"></i>
-                    Subscribe to Channel
-                </a>
-                
-                <button onclick="recheckSubscription()" 
-                        class="w-full bg-amber-600 hover:bg-amber-700 text-gray-900 font-semibold py-3 px-6 rounded-lg transition duration-150">
-                    <i data-lucide="refresh-cw" class="w-5 h-5 inline mr-2"></i>
-                    I've Subscribed - Check Again
-                </button>
-            </div>
-        </div>
-    </div>
 
     <script>
         const tg = window.Telegram.WebApp;
@@ -266,8 +242,6 @@
         const userId = tg.initDataUnsafe?.user?.id;
         const initData = tg.initData;
         
-        let isCheckingSubscription = false;
-
         function handleStartParamOnce() {
             const movieSlug = tg.initDataUnsafe?.start_param;
             if (!movieSlug) return;
@@ -280,74 +254,6 @@
 
             sessionStorage.setItem("last_handled_movie", movieSlug);
             window.location.href = `/${movieSlug}/`;
-        }
-        
-        async function checkSubscription() {
-            if (!userId) {
-                console.log('No user ID available - allowing access');
-                return;
-            }
-            
-            if (isCheckingSubscription) return;
-            isCheckingSubscription = true;
-            
-            try {
-                const response = await fetch('/check-subscription/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        //'X-CSRFToken': getCookie('csrftoken')
-                    },
-                    body: JSON.stringify({
-                        userId: userId,
-                        initData: initData
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.isSubscribed) {
-                    handleStartParamOnce();
-                    hideSubscriptionModal();
-                } else {
-                    showSubscriptionModal();
-                }
-            } catch (error) {
-                console.error('Error checking subscription:', error);
-                // On error, allow access (fail open)
-                hideSubscriptionModal();
-            } finally {
-                isCheckingSubscription = false;
-            }
-        }
-        
-        function showSubscriptionModal() {
-            const modal = document.getElementById('subscriptionModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            lucide.createIcons();
-        }
-        
-        function hideSubscriptionModal() {
-            const modal = document.getElementById('subscriptionModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-        
-        async function recheckSubscription() {
-            const button = event.target.closest('button');
-            const originalHTML = button.innerHTML;
-            button.innerHTML = '<i data-lucide="loader" class="w-5 h-5 inline mr-2 animate-spin"></i>Checking...';
-            lucide.createIcons();
-            button.disabled = true;
-            
-            await checkSubscription();
-            
-            setTimeout(() => {
-                button.innerHTML = originalHTML;
-                button.disabled = false;
-                lucide.createIcons();
-            }, 1000);
         }
         
         function getCookie(name) {

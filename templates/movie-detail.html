@@ -476,9 +476,9 @@
                     <i data-lucide="lock" class="w-16 h-16 text-amber-500 mx-auto"></i>
                 </div>
                 <h2 class="text-2xl font-bold text-white mb-3">Subscribe to Continue</h2>
-                <p class="text-gray-400 mb-6">Please subscribe to our Telegram channel to access the full movie catalog</p>
+                <p class="text-gray-400 mb-6">Please start the bot and subscribe to our Telegram channel to access the full movie catalog</p>
                 
-                <a href="https://t.me/english_kinolar_y" target="_blank" 
+                <a href="https://t.me/AhmedovMoviesBot" target="_blank" 
                 class="block w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg mb-3 transition duration-150">
                     <i data-lucide="send" class="w-5 h-5 inline mr-2"></i>
                     Subscribe to Channel
@@ -508,48 +508,7 @@
       
         const userId = tg.initDataUnsafe?.user?.id;
         const initData = tg.initData;
-        
-        let isCheckingSubscription = false;
-        checkSubscription();
-        
-        async function checkSubscription() {
-            if (!userId) {
-                console.log('No user ID available - allowing access');
-                return;
-            }
-            
-            if (isCheckingSubscription) return;
-            isCheckingSubscription = true;
-            
-            try {
-                const response = await fetch('/check-subscription/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        //'X-CSRFToken': getCookie('csrftoken')
-                    },
-                    body: JSON.stringify({
-                        userId: userId,
-                        initData: initData
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.isSubscribed) {
-                    hideSubscriptionModal();
-                } else {
-                    showSubscriptionModal();
-                }
-            } catch (error) {
-                console.error('Error checking subscription:', error);
-                // On error, allow access (fail open)
-                hideSubscriptionModal();
-            } finally {
-                isCheckingSubscription = false;
-            }
-        }
-        
+      
         function showSubscriptionModal() {
             const modal = document.getElementById('subscriptionModal');
             modal.classList.remove('hidden');
@@ -562,47 +521,59 @@
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }
-        
-        async function recheckSubscription() {
-            const button = event.target.closest('button');
-            const originalHTML = button.innerHTML;
-            button.innerHTML = '<i data-lucide="loader" class="w-5 h-5 inline mr-2 animate-spin"></i>Checking...';
-            lucide.createIcons();
-            button.disabled = true;
-            
-            await checkSubscription();
-            
-            setTimeout(() => {
-                button.innerHTML = originalHTML;
-                button.disabled = false;
-                lucide.createIcons();
-            }, 1000);
+        function recheckSubscription() {
+            fetch('/check-subscription/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "ok") {
+                    hideSubscriptionModal();
+                    alert("✅ Subscription verified! You can now watch the movie.");
+                } else {
+                    alert("❌ You are still not subscribed. Please subscribe first.");
+                }
+            });
         }
-        function sendMovie(movieId) {
-          const userId = tg.initDataUnsafe?.user?.id;
-          if (!userId) {
-              alert("Cannot send movie: Telegram user ID not found.");
-              return;
-          }
+        
+        window.sendMovie = function(movieId) {
+            const userId = tg.initDataUnsafe?.user?.id;
+            if (!userId) {
+                alert("Cannot send movie: Telegram user ID not found.");
+                return;
+            }
 
-          fetch(`/send-movie/`, {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-                  'X-CSRFToken': getCookie('csrftoken')
-              },
-              body: JSON.stringify({
-                  movie_id: movieId,
-                  user_id: userId
-              })
-          }).then(response => {
-              if (response.ok) {
-                  alert('Movie sent to your Telegram!');
-              } else {
-                  alert('Something went wrong.');
-              }
-          });
-      }
+            fetch(`/send-movie/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    movie_id: movieId,
+                    user_id: userId
+                })
+            })
+            .then(res => res.json().then(data => ({status: res.status, data})))
+            .then(({status, data}) => {
+                if (status === 200 && data.status === "ok") {
+                    alert('✅ Movie sent to your Telegram!');
+                } else if (status === 403 && data.status === "error") {
+                    showSubscriptionModal();
+                } else if (status === 404 && data.status === "error") {
+                    alert(`❌ ${data.message}`);
+                } else if (status === 400 && data.status === "error") {
+                    alert(`❌ Invalid request`);
+                } else {
+                    alert(`❌ Something went wrong (status: ${status})`);
+                }
+            })
+            .catch(err => {
+                console.error("Network error:", err);
+                alert("❌ Network error. Please try again.");
+            });
+        }
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {

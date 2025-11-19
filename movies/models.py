@@ -66,3 +66,15 @@ class Movies(models.Model):
     class Meta:
         verbose_name = 'Movie'
         verbose_name_plural = "Movies"
+
+
+class PartnerChannels(models.Model):
+    title = models.CharField(max_length=255, null=True,blank=True)
+    channel_id = models.CharField(max_length=255)  #@english_kinolar_y
+    link = models.CharField(max_length=255, null=True, blank=True)
+    def __str__(self):
+        return self.title
+    
+    class Meta:
+        verbose_name = 'Partner Channel'
+        verbose_name_plural = 'Partner Channels'

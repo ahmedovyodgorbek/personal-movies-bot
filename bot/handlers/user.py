@@ -1,14 +1,17 @@
-from aiogram import Router
+from aiogram import Router, F
 from aiogram.types import Message
 from aiogram.filters import Command, CommandObject
 from asgiref.sync import sync_to_async
 from django.db import transaction
 from app.models import TelegramUser
 from django.db.models import Count
-from bot.keyboards.user import admin
+from bot.keyboards.user import admin, channels_keyboard
 from html import escape
+from bot.utils.all import *
 
+import load_env
 
+from movies.models import Movies, PartnerChannels
 
 router = Router()
 
@@ -84,11 +87,6 @@ async def friends(message: Message):
     # Send message with HTML parse mode
     await message.answer(text=text, parse_mode="HTML")
     
-def mention_user(user_id: int, first_name: str) -> str:
-    from html import escape
-    safe_name = escape(first_name or "Unknown")
-    return f"<a href='tg://user?id={user_id}'>{safe_name}</a>"
-
 @router.message(Command("admin"))
 async def contact_admin(message: Message):
     user = await create_or_update_user(message)
@@ -104,72 +102,44 @@ async def invite_friends(message: Message, command: CommandObject):
     await message.answer(text=text, parse_mode="HTML")
 
 
-@sync_to_async
-def create_or_update_user(message:Message):
-    is_premium = getattr(message.from_user, "is_premium", False) or False
+@router.message(F.text.regexp(r'^\d+$'))
+async def send_movie(message: Message):
+    movie_id = int(message.text)
 
-    user, created = TelegramUser.objects.update_or_create(
-        telegram_id=message.from_user.id,
-        defaults={
-            "username": message.from_user.username,
-            "first_name": message.from_user.first_name,
-            "last_name": message.from_user.last_name,
-            "language_code": message.from_user.language_code,
-            "is_premium": is_premium
-        }
+    partners = await sync_to_async(list)(PartnerChannels.objects.all())
+    for partner in partners:
+        subscribed = await is_subscribed(bot=message.bot, user_id=message.from_user.id,
+                                            channel_id=partner.channel_id)
+        if not subscribed:
+            await message.answer(text="Subscribe to continue", reply_markup=channels_keyboard(partners))
+            return
+        
+    # Get movie
+    movie = await sync_to_async(Movies.objects.filter(id=movie_id).first)()
+    if not movie:
+        await message.answer("Movie with this ID was not found ❌")
+        return
+
+    # Extract message ID from telegram link (make sure link is correct)
+    movie_link = movie.telegram_link
+
+    try:
+        message_id = int(movie_link.rstrip("/").split("/")[-1])
+    except ValueError:
+        print("Invalid movie link stored in database ❌")
+        return
+
+    # Copy message from group
+    await message.bot.copy_message(
+        chat_id=message.chat.id,
+        from_chat_id=load_env.GROUP_ID,
+        message_id=message_id,
+        protect_content=True
     )
-    return user
 
-
-def handle_user_referral(message: Message, args: str):
-    referrer = None
-
-    if args.startswith("ref_"):
-        ref_code = args.replace("ref_", "")
-        try:
-            referrer = TelegramUser.objects.get(referral_code=ref_code)
-            # 🔒 Prevent self-referral
-            if referrer.telegram_id == message.from_user.id:
-                referrer = None
-        except TelegramUser.DoesNotExist:
-            referrer = None
-
-    is_premium = getattr(message.from_user, "is_premium", False) or False
-
-    user, created = TelegramUser.objects.update_or_create(
-        telegram_id=message.from_user.id,
-        defaults={
-            "username": message.from_user.username,
-            "first_name": message.from_user.first_name,
-            "last_name": message.from_user.last_name,
-            "language_code": message.from_user.language_code,
-            "is_premium": is_premium,
-            
-        }
-    )
-    if created and referrer:
-        user.referrer = referrer
-        user.save(update_fields=["referrer"])
-
-    return user, created, referrer
-
-
-from django.db.models import Count
-from asgiref.sync import sync_to_async
-
-async def get_user_rank(telegram_id: int) -> tuple:
-    # Annotate users with number of referrals, order descending
-    users = await sync_to_async(
-        lambda: list(
-            TelegramUser.objects.annotate(num_referrals=Count('referrals'))
-            .order_by('-num_referrals')
-            .values('telegram_id', 'num_referrals')
-        )
-    )()
-
-    # Find the user’s position
-    for index, u in enumerate(users, start=1):
-        if u['telegram_id'] == telegram_id:
-            return index, u['num_referrals']  # rank, referral count
+    # If admin — send extra text
+    if str(message.from_user.id) in load_env.ADMINS:
+        text = await post_text(movie=movie)
+        await message.answer(text=text, parse_mode="HTML")
     
-    return None, 0  # user not found
+

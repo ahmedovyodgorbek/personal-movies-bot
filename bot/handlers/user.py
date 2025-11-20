@@ -1,5 +1,6 @@
 from aiogram import Router, F
-from aiogram.types import Message, ChatType
+from aiogram.types import Message
+from aiogram.enums import ChatType
 from aiogram.filters import Command, CommandObject
 from asgiref.sync import sync_to_async
 from django.db import transaction
@@ -15,7 +16,7 @@ from movies.models import Movies, PartnerChannels
 
 router = Router()
 
-@router.message(Command("start"))
+@router.message(Command("start"), F.chat.type == ChatType.PRIVATE)
 async def start_handler(message: Message, command: CommandObject):
     args = command.args or ""
 
@@ -52,7 +53,7 @@ async def start_handler(message: Message, command: CommandObject):
     await message.answer(text)
 
 
-@router.message(Command("friends"))
+@router.message(Command("friends"), F.chat.type == ChatType.PRIVATE)
 async def friends(message: Message):
     user = await create_or_update_user(message)
     top_users = await sync_to_async(
@@ -95,13 +96,13 @@ async def friends(message: Message):
     await message.answer(text=text, parse_mode="HTML")
     
 
-@router.message(Command("admin"))
+@router.message(Command("admin"), F.chat.type == ChatType.PRIVATE)
 async def contact_admin(message: Message):
     user = await create_or_update_user(message)
     await message.answer(text="Click on the button to contact with Admin", reply_markup=admin())
 
 
-@router.message(Command("referral"))
+@router.message(Command("referral"), F.chat.type == ChatType.PRIVATE)
 async def invite_friends(message: Message, command: CommandObject):
     user = await create_or_update_user(message)
     text = (f"Share this link: \n\n" 

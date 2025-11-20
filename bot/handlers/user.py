@@ -139,6 +139,8 @@ async def send_movie(message: Message):
         message_id = int(movie_link.rstrip("/").split("/")[-1])
     except ValueError:
         print("Invalid movie link stored in database ❌")
+        text = f"in user.py line 142\nInvalid movie link stored in database ❌"
+        await send_log_text(text=text, type="error")
         return
 
     # Copy message from group

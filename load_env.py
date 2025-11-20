@@ -8,6 +8,7 @@ SECRET_KEY = env.str("SECRET_KEY")
 DEBUG = env.bool("DEBUG")
 ADMINS = env.list("ADMINS")
 GROUP_ID = env.str("GROUP_ID")
+LOG_GROUP_ID=env.str("LOG_GROUP_ID")
 BOT = env.str("BOT") # bot username
 # PAYME_ID = env.str("PAYME_ID")
 # PAYME_KEY = env.str("PAYME_KEY")

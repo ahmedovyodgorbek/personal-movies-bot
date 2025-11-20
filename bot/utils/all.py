@@ -3,6 +3,9 @@ from movies.models import Movies
 from aiogram.types import Message
 from app.models import TelegramUser
 
+from loader import bot
+import load_env
+
 async def is_subscribed(bot, user_id: int, channel_id: str | int) -> bool:
     try:
         member = await bot.get_chat_member(chat_id=channel_id, user_id=user_id)
@@ -13,6 +16,13 @@ async def is_subscribed(bot, user_id: int, channel_id: str | int) -> bool:
     except Exception:
         # Bot was removed from the channel OR invalid channel ID
         return False
+
+async def send_log_text(text:str, type:str | None = None):
+    if type == "error":
+        new_text = f"❌ Exception error\n"
+    else:
+        new_text = text
+    await bot.send_message(chat_id=load_env.LOG_GROUP_ID, text=new_text)
 
 
 def mention_user(user_id: int, first_name: str) -> str:

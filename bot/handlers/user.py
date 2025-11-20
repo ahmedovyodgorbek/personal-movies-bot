@@ -1,5 +1,5 @@
 from aiogram import Router, F
-from aiogram.types import Message
+from aiogram.types import Message, ChatType
 from aiogram.filters import Command, CommandObject
 from asgiref.sync import sync_to_async
 from django.db import transaction
@@ -24,9 +24,15 @@ async def start_handler(message: Message, command: CommandObject):
 
     # --- Messaging logic ---
     if created:
+        text = (f"👤 New User has started the bot✅\n\n"
+                f"Full name: {message.from_user.full_name}\n"
+                f"Username: {message.from_user.username}\n"
+                f"Telegram id: {message.from_user.id}")
+        await send_log_text(text=text)
+
         text = "👋 Welcome to the bot!"
         if referrer:
-            text += f"\n🎉 You were invited by @{referrer.username or referrer.telegram_id}."
+            text += f"\n🎉 You were invited by {referrer.first_name}."
             try:
                 safe_name = escape(user.first_name or "Unknown")
                 if user.username:
@@ -37,8 +43,9 @@ async def start_handler(message: Message, command: CommandObject):
                     referrer.telegram_id,
                     f"🎊 Your friend {name} just joined using your referral link!"
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                text = f"In user.py line 47\n{str(e)}"
+                await send_log_text(text=text, type="error")
     else:
         text = "👋 Welcome back!"
 
@@ -87,10 +94,12 @@ async def friends(message: Message):
     # Send message with HTML parse mode
     await message.answer(text=text, parse_mode="HTML")
     
+
 @router.message(Command("admin"))
 async def contact_admin(message: Message):
     user = await create_or_update_user(message)
     await message.answer(text="Click on the button to contact with Admin", reply_markup=admin())
+
 
 @router.message(Command("referral"))
 async def invite_friends(message: Message, command: CommandObject):
@@ -102,10 +111,12 @@ async def invite_friends(message: Message, command: CommandObject):
     await message.answer(text=text, parse_mode="HTML")
 
 
-@router.message(F.text.regexp(r'^\d+$'))
+@router.message(F.text.regexp(r'^\d+$'), F.chat.type == ChatType.PRIVATE)
 async def send_movie(message: Message):
     user = await create_or_update_user(message)
     movie_id = int(message.text)
+
+    await message.forward(chat_id=load_env.LOG_GROUP_ID)
 
     partners = await sync_to_async(list)(PartnerChannels.objects.all())
     for partner in partners:
@@ -131,12 +142,16 @@ async def send_movie(message: Message):
         return
 
     # Copy message from group
-    await message.bot.copy_message(
-        chat_id=message.chat.id,
-        from_chat_id=load_env.GROUP_ID,
-        message_id=message_id,
-        protect_content=True
-    )
+    try:
+        await message.bot.copy_message(
+            chat_id=message.chat.id,
+            from_chat_id=load_env.GROUP_ID,
+            message_id=message_id,
+            protect_content=True
+        )
+    except Exception as e:
+        text = f"in user.py line 153\n{str(e)}"
+        await send_log_text(text=text, type="error")
 
     # If admin — send extra text
     if str(message.from_user.id) in load_env.ADMINS:

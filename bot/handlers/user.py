@@ -117,8 +117,11 @@ async def send_movie(message: Message):
     user = await create_or_update_user(message)
     movie_id = int(message.text)
 
-    await message.forward(chat_id=load_env.LOG_GROUP_ID)
-
+    try:
+        await message.forward(chat_id=load_env.LOG_GROUP_ID)
+    except Exception as e:
+        print(str(e))
+        
     partners = await sync_to_async(list)(PartnerChannels.objects.all())
     for partner in partners:
         subscribed = await is_subscribed(bot=message.bot, user_id=message.from_user.id,

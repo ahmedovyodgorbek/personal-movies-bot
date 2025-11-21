@@ -3,7 +3,7 @@ from movies.models import Movies
 from aiogram.types import Message
 from app.models import TelegramUser
 
-from loader import bot
+from bot.loader import bot
 import load_env
 
 async def is_subscribed(bot, user_id: int, channel_id: str | int) -> bool:
@@ -117,3 +117,8 @@ async def get_user_rank(telegram_id: int) -> tuple:
             return index, u['num_referrals']  # rank, referral count
     
     return None, 0  # user not found
+
+
+@sync_to_async
+def get_all_users():
+    return list(TelegramUser.objects.values_list("telegram_id", flat=True))

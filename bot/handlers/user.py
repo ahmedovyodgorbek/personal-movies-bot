@@ -7,6 +7,7 @@ from django.db import transaction
 from app.models import TelegramUser
 from django.db.models import Count
 from bot.keyboards.user import admin, channels_keyboard
+from bot.keyboards.admin import admin_menu
 from html import escape
 from bot.utils.all import *
 
@@ -18,6 +19,10 @@ router = Router()
 
 @router.message(Command("start"), F.chat.type == ChatType.PRIVATE)
 async def start_handler(message: Message, command: CommandObject):
+    if str(message.from_user.id) in load_env.ADMINS:
+        await message.answer(text="Welcome to Admin Menu", reply_markup=admin_menu())
+        return
+    
     args = command.args or ""
 
     # Run DB logic in a synchronous thread

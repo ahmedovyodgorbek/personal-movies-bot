@@ -11,6 +11,7 @@ django.setup()
 
 # from load_env import *
 from bot.handlers.user import router as user_router
+from bot.handlers.admin import router as admin_router
 # from apps.common.middlewares import MembershipCheckMiddleware
 from loader import bot, dp
 
@@ -21,6 +22,7 @@ async def main():
 
     # Add routers to dispatcher
     dp.include_router(router=user_router)
+    dp.include_router(router=admin_router)
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)

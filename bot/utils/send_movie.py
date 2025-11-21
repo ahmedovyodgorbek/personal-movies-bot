@@ -1,5 +1,5 @@
 from bot.loader import bot
-from load_env import GROUP_ID
+from load_env import GROUP_ID, LOG_GROUP_ID
 import asyncio
 from aiogram import Bot
 
@@ -53,7 +53,7 @@ def broadcast_ad(ad_chat_id, ad_message_id):
                     duration_str = f"{minutes}m {seconds}s"
 
             await task_bot.send_message(
-                chat_id=GROUP_ID,  # or wherever you send logs
+                chat_id=LOG_GROUP_ID,  # or wherever you send logs
                 text=f"✅ Broadcast completed\n\n"
                      f"✅ Sent: {sent}\n"
                      f"❌ Failed: {failed}\n"

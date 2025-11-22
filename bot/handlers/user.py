@@ -47,7 +47,8 @@ async def start_handler(message: Message, command: CommandObject):
                     name = f"<a href='tg://user?id={message.from_user.id}'>{safe_name}</a>"
                 await message.bot.send_message(
                     referrer.telegram_id,
-                    f"🎊 Your friend {name} just joined using your referral link!"
+                    f"🎊 Your friend {name} just joined using your referral link!",
+                    parse_mode="HTML"
                 )
             except Exception as e:
                 text = f"In user.py line 47\n{str(e)}"
